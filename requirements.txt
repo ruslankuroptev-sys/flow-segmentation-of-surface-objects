@@ -1,0 +1,8 @@
+pyspark
+kafka-python
+torch
+torchvision
+streamlit
+flask
+psycopg2-binary
+albumentations
