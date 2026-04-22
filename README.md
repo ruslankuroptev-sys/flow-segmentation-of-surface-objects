@@ -1,15 +1,17 @@
-# flow-segmentation-of-surface-objects
+Потоковая сегментация надводных объектов
 
-D:\MARINE_PIPELINE
-├── dataset/             # Исходные данные
-│   ├── Detection/       # Данные для обучения YOLO
-│   └── Segmentation/    # Данные для DeepLabV3+ (MaSTr1325)
-├── data_lake/           # Результаты работы конвейера (Маски и Визуализация)
-├── nifi_data/           # Конфигурации Apache NiFi
-├── postgres_data/       # База данных метаданных (PostgreSQL)
-├── shared_hdfs/         # Распределенное хранилище (Hadoop HDFS)
-└── workspace/           # Основная рабочая область
-    ├── models/          # Финальные веса моделей
-    ├── runs/            # Логи обучения и веса YOLO
-    ├── checkpoints/     # Контрольные точки Spark Streaming
-    └── *.py / *.ipynb   # Исходный код и ноутбуки
+Интеллектуальная инфраструктура для сбора и обработки морских данных в реальном времени.
+
+### Технологический стек:
+* **ML:** PyTorch (DeepLabV3+).
+* **Big Data:** Apache Kafka, Apache Spark Structured Streaming.
+* **Database:** PostgreSQL.
+* **Interface:** Streamlit (UI), Flask (Video Streamer).
+* **Infrastructure:** Docker Compose.
+
+### Как запустить:
+1. Клонировать репозиторий.
+2. Запустить контейнеры: `docker-compose up -d`.
+3. Запустить продюсер данных: `producer.ipynb` через ноутбук по адресу http://localhost:8888/lab/workspaces/.
+4. Запусттиь спарк 'spark.ipynb' через ноутбук по адресу http://localhost:8888/lab/workspaces/.
+5. Открыть дашборд Streamlit на порту 8501.
