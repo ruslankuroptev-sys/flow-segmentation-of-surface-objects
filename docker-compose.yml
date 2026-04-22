@@ -1,0 +1,109 @@
+version: '3.8'
+
+services:
+  # 1. Аналитический хаб: Spark-процессор и ML-инференс
+  marine_spark:
+    image: jupyter/pyspark-notebook:latest
+    container_name: marine_spark
+    user: root
+    ports:
+      - "8888:8888"   # Интерфейс Jupyter Lab
+      - "4040:4040"   # Spark Web UI
+    volumes:
+      - D:\Marine_Pipeline\workspace:/home/jovyan/work
+      - D:\Marine_Pipeline\dataset:/home/jovyan/dataset
+      # Центральное хранилище для датасета (Data Lake)
+      - D:\Marine_Pipeline\data_lake:/home/jovyan/work/storage
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+    restart: always
+
+  # 2. Хранилище метаданных: Реестр кадров и масок
+  marine_db:
+    image: postgres:15
+    container_name: marine_db
+    environment:
+      - POSTGRES_USER=ruslan
+      - POSTGRES_PASSWORD=marine_pass
+      - POSTGRES_DB=marine_pipeline
+    ports:
+      - "5432:5432"
+    volumes:
+      - D:\Marine_Pipeline\postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  # 3. Zookeeper: Координатор очереди
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: marine_zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    restart: always
+
+  # 4. Kafka: Потоковый прием видео-событий (Ingestion)
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: marine_kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_ENABLE_KRAFT: 'false'
+    restart: always
+
+  # 5. Grafana: Мониторинг статистики обработки
+  grafana:
+    image: grafana/grafana:latest
+    container_name: marine_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - marine_db
+    restart: always
+
+  # 6. Streamlit: Панель управления датасетом и мониторинг
+  marine_ui:
+    image: jupyter/pyspark-notebook:latest
+    container_name: marine_ui
+    user: root
+    ports:
+      - "8501:8501"
+    volumes:
+      - D:\Marine_Pipeline\workspace:/home/jovyan/work
+      # UI должен видеть хранилище для отображения масок
+      - D:\Marine_Pipeline\data_lake:/home/jovyan/work/storage
+    depends_on:
+      - marine_db
+      - marine_streamer
+    command: >
+      sh -c "pip install streamlit psycopg2-binary && 
+             streamlit run /home/jovyan/work/app.py --server.port=8501 --server.address=0.0.0.0"
+    restart: always
+
+  # 7. Flask Streamer: Визуализация 24 FPS (без записи на диск)
+  marine_streamer:
+    image: jupyter/pyspark-notebook:latest
+    container_name: marine_streamer
+    user: root
+    ports:
+      - "5000:5000"
+    volumes:
+      - D:\Marine_Pipeline\workspace:/home/jovyan/work
+    command: >
+      sh -c "pip install flask && 
+             python /home/jovyan/work/server.py"
+    restart: always
+
+networks:
+  default:
+    name: marine_network
