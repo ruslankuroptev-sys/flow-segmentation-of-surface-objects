@@ -13,6 +13,6 @@
 1. Клонировать репозиторий.
 2. Скачать модель DeepLabV3+ по ссылке https://disk.yandex.ru/d/fMLWMvtbe0T-Dg
 3. Запустить контейнеры: `docker-compose up -d`.
-4. Запустить продюсер данных: `producer.ipynb` через ноутбук по адресу http://localhost:8888/lab/workspaces/.
-5. Запустить спарк 'spark.ipynb' через ноутбук по адресу http://localhost:8888/lab/workspaces/.
+4. Запустить продюсер данных `producer.ipynb` через ноутбук по адресу http://localhost:8888/lab/workspaces/.
+5. Запустить спарк `spark.ipynb` через ноутбук по адресу http://localhost:8888/lab/workspaces/.
 6. Открыть дашборд Streamlit на порту 8501.
